@@ -1,14 +1,5 @@
 const express = require("express");
-
-const puppeteer = require("puppeteer-extra");
-
-const StealthPlugin = require(
-    "puppeteer-extra-plugin-stealth"
-);
-
-// ENABLE STEALTH
-
-puppeteer.use(StealthPlugin());
+const puppeteer = require("puppeteer");
 
 const app = express();
 
@@ -77,27 +68,33 @@ app.get("/fetch-user-stream", async (req, res) => {
 
         send(5);
 
-       browser = await puppeteer.launch({
+        browser = await puppeteer.launch({
 
-    headless: "new",
+            headless: true,
 
-    args: [
+            executablePath: puppeteer.executablePath(),
 
-        "--no-sandbox",
+            args: [
 
-        "--disable-setuid-sandbox",
+                "--no-sandbox",
 
-        "--disable-dev-shm-usage",
+                "--disable-setuid-sandbox",
 
-        "--disable-gpu",
+                "--disable-dev-shm-usage",
 
-        "--single-process",
+                "--disable-accelerated-2d-canvas",
 
-        "--no-zygote"
+                "--disable-gpu",
 
-    ]
+                "--window-size=1920x1080",
 
-});
+                "--single-process",
+
+                "--no-zygote"
+
+            ]
+
+        });
 
         const page = await browser.newPage();
 
@@ -317,7 +314,7 @@ data: ${JSON.stringify({
 
     } catch (err) {
 
-        console.log(err);
+        console.log("FULL ERROR =>", err);
 
         if (browser) {
 
@@ -348,7 +345,9 @@ data: ${JSON.stringify({
 // START SERVER
 // =====================================
 
-app.listen(3000, () => {
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
 
     console.log(`
 
@@ -356,7 +355,7 @@ app.listen(3000, () => {
 SERVER RUNNING
 ====================================
 
-http://localhost:3000
+http://localhost:${PORT}
 
 ====================================
 
