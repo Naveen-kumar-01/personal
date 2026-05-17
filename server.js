@@ -77,19 +77,27 @@ app.get("/fetch-user-stream", async (req, res) => {
 
         send(5);
 
-        browser = await puppeteer.launch({
+       browser = await puppeteer.launch({
 
-            headless: true,
+    headless: "new",
 
-            args: [
+    args: [
 
-                "--no-sandbox",
+        "--no-sandbox",
 
-                "--disable-setuid-sandbox"
+        "--disable-setuid-sandbox",
 
-            ]
+        "--disable-dev-shm-usage",
 
-        });
+        "--disable-gpu",
+
+        "--single-process",
+
+        "--no-zygote"
+
+    ]
+
+});
 
         const page = await browser.newPage();
 
