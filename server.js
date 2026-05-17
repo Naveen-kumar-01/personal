@@ -70,9 +70,7 @@ app.get("/fetch-user-stream", async (req, res) => {
 
         browser = await puppeteer.launch({
 
-            headless: true,
-
-            executablePath: puppeteer.executablePath(),
+            headless: "new",
 
             args: [
 
@@ -80,17 +78,7 @@ app.get("/fetch-user-stream", async (req, res) => {
 
                 "--disable-setuid-sandbox",
 
-                "--disable-dev-shm-usage",
-
-                "--disable-accelerated-2d-canvas",
-
-                "--disable-gpu",
-
-                "--window-size=1920x1080",
-
-                "--single-process",
-
-                "--no-zygote"
+                "--disable-dev-shm-usage"
 
             ]
 
