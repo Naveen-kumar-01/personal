@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GJU Image Finder</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#0f0f0f;
+    color:white;
+    font-family:Arial, sans-serif;
+
+    min-height:100vh;
+
+    overflow-x:hidden;
+    overflow-y:auto;
+
+    display:flex;
+    flex-direction:column;
+}
+
+.topbar{
+    width:100%;
+    padding:15px;
+    background:#181818;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    border-bottom:1px solid #333;
+}
+
+input{
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#222;
+    color:white;
+    font-size:16px;
+    width:180px;
+    outline:none;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    background:#00b894;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.viewer{
+
+    flex:1;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    position:relative;
+
+    flex-direction:column;
+
+    padding:20px;
+
+    padding-bottom:120px;
+}
+
+/* FLIP CARD */
+
+.flip-card{
+
+    width:320px;
+    height:520px;
+
+    perspective:1000px;
+
+    display:none;
+
+    cursor:pointer;
+}
+
+.flip-inner{
+
+    width:100%;
+    height:100%;
+
+    position:relative;
+
+    transition:transform 0.8s;
+
+    transform-style:preserve-3d;
+}
+
+.flip-card.flipped .flip-inner{
+
+    transform:rotateY(180deg);
+}
+
+.flip-front,
+.flip-back{
+
+    position:absolute;
+
+    width:100%;
+    height:100%;
+
+    backface-visibility:hidden;
+
+    border-radius:18px;
+
+    overflow:hidden;
+}
+
+.flip-front{
+
+    background:#fff;
+
+    box-shadow:
+        0 0 25px rgba(0,0,0,0.4);
+}
+
+.flip-front img{
+
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+}
+
+/* BACK SIDE */
+
+.flip-back{
+
+    background:
+        linear-gradient(
+            145deg,
+            #111,
+            #1b1b1b
+        );
+
+    color:white;
+
+    transform:rotateY(180deg);
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:25px;
+
+    border:2px solid #00b894;
+
+    box-shadow:
+        0 0 25px rgba(0,184,148,0.25);
+
+    position:relative;
+
+    overflow:hidden;
+}
+
+/* GLOW EFFECT */
+
+.flip-back::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:180px;
+    height:180px;
+
+    background:
+        rgba(0,184,148,0.08);
+
+    border-radius:50%;
+
+    top:-60px;
+    right:-60px;
+
+    filter:blur(10px);
+}
+
+/* NAME */
+
+.flip-back h2{
+
+    color:#00e6b8;
+
+    margin-bottom:25px;
+
+    font-size:30px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+    text-shadow:
+        0 0 10px rgba(0,230,184,0.3);
+}
+
+/* INFO BOXES */
+
+.flip-back p{
+
+    width:100%;
+
+    margin:10px 0;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    background:
+        rgba(255,255,255,0.05);
+
+    border:
+        1px solid rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(6px);
+
+    font-size:15px;
+
+    line-height:1.6;
+
+    overflow-wrap:anywhere;
+
+    word-break:break-word;
+
+    transition:0.3s;
+}
+
+.flip-back p:hover{
+
+    transform:scale(1.03);
+
+    background:
+        rgba(0,184,148,0.08);
+
+    border:
+        1px solid rgba(0,184,148,0.25);
+}
+
+/* LOADER */
+
+.loader{
+
+    width:70px;
+    height:70px;
+
+    border:6px solid rgba(255,255,255,0.15);
+
+    border-top:6px solid #00b894;
+
+    border-radius:50%;
+
+    animation:spin 0.8s linear infinite;
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    display:none;
+}
+
+@keyframes spin{
+
+    100%{
+
+        transform:
+            translate(-50%,-50%)
+            rotate(360deg);
+    }
+}
+
+/* DETAILS BUTTON */
+
+.detailsBtn{
+
+    margin-top:15px;
+
+    width:220px;
+    height:52px;
+
+    background:#0984e3;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    position:relative;
+
+    display:none;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    user-select:none;
+
+    font-weight:bold;
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,0.3);
+}
+
+.progressFill{
+
+    position:absolute;
+
+    left:0;
+    top:0;
+
+    width:0%;
+    height:100%;
+
+    background:#00b894;
+
+    transition:width 0.2s linear;
+}
+
+#btnText{
+
+    position:relative;
+
+    z-index:2;
+}
+
+/* STATUS */
+
+.status{
+
+    margin-top:12px;
+
+    background:rgba(0,0,0,0.7);
+
+    padding:10px 18px;
+
+    border-radius:12px;
+}
+
+/* MOBILE */
+
+@media(max-width:600px){
+
+    .topbar{
+
+        flex-direction:column;
+    }
+
+    input{
+
+        width:100%;
+    }
+
+    button{
+
+        width:100%;
+    }
+
+    .flip-card{
+
+        width:90vw;
+        height:78vh;
+    }
+
+    .flip-back{
+
+        padding:18px;
+    }
+
+    .flip-back h2{
+
+        font-size:24px;
+    }
+
+    .flip-back p{
+
+        font-size:13px;
+
+        padding:10px;
+    }
+
+    .viewer{
+
+        padding-bottom:160px;
+    }
+
+    .detailsBtn{
+
+        width:85vw;
+
+        position:fixed;
+
+        bottom:20px;
+
+        left:50%;
+
+        transform:translateX(-50%);
+
+        z-index:999;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+
+    <input
+        type="number"
+        id="yearInput"
+        placeholder="Year (2024)"
+    >
+
+    <input
+        type="text"
+        id="rollInput"
+        placeholder="Full Roll Number"
+    >
+
+    <button onclick="startFinder()">
+        Run
+    </button>
+
+</div>
+
+<div class="viewer">
+
+    <!-- FLIP CARD -->
+
+    <div
+        class="flip-card"
+        id="flipCard"
+    >
+
+        <div class="flip-inner">
+
+            <!-- FRONT -->
+
+            <div class="flip-front">
+
+                <img
+                    id="pic"
+                    src=""
+                >
+
+            </div>
+
+            <!-- BACK -->
+
+            <div class="flip-back">
+
+                <h2 id="dName">
+                    NAME
+                </h2>
+
+                <p id="dEmail">
+                    EMAIL
+                </p>
+
+                <p id="dDob">
+                    DOB
+                </p>
+
+                <p id="dRoll">
+                    ROLL
+                </p>
+
+                <p id="dPhone">
+                    PHONE
+                </p>
+
+                <p id="dAddress">
+                    ADDRESS
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- LOADER -->
+
+    <div
+        class="loader"
+        id="loader"
+    ></div>
+
+    <!-- DETAILS BUTTON -->
+
+    <div
+        class="detailsBtn"
+        id="detailsBtn"
+        onclick="showDetails()"
+    >
+
+        <div
+            class="progressFill"
+            id="progressFill"
+        ></div>
+
+        <span id="btnText">
+            Show Details
+        </span>
+
+    </div>
+
+    <!-- STATUS -->
+
+    <div
+        class="status"
+        id="status"
+    >
+        Waiting...
+    </div>
+
+</div>
+
+<script>
+
+let currentRoll = 0;
+
+let currentYear = "";
+
+let loading = false;
+
+let detailsLoaded = false;
+
+const pic =
+    document.getElementById("pic");
+
+const statusText =
+    document.getElementById("status");
+
+const loader =
+    document.getElementById("loader");
+
+const detailsBtn =
+    document.getElementById("detailsBtn");
+
+const flipCard =
+    document.getElementById("flipCard");
+
+const progressFill =
+    document.getElementById(
+        "progressFill"
+    );
+
+const btnText =
+    document.getElementById(
+        "btnText"
+    );
+
+function startFinder(){
+
+    currentYear = document
+        .getElementById("yearInput")
+        .value
+        .trim();
+
+    currentRoll = document
+        .getElementById("rollInput")
+        .value
+        .trim();
+
+    if(!currentYear || !currentRoll){
+
+        alert(
+            "Enter year and roll number"
+        );
+
+        return;
+    }
+
+    currentRoll = parseInt(currentRoll);
+
+    loadImage(currentRoll);
+}
+
+function loadImage(roll){
+
+    if(loading) return;
+
+    loading = true;
+
+    detailsLoaded = false;
+
+    progressFill.style.width =
+        "0%";
+
+    btnText.innerText =
+        "Show Details";
+
+    detailsBtn.style.pointerEvents =
+        "auto";
+
+    flipCard.classList.remove(
+        "flipped"
+    );
+
+    loader.style.display =
+        "block";
+
+    flipCard.style.display =
+        "none";
+
+    detailsBtn.style.display =
+        "none";
+
+    statusText.innerText =
+        `Loading ${roll}...`;
+
+    let url =
+
+`https://gjuonline.ac.in/gjust/uploads/photo/dept/${currentYear}/${roll}.jpg?t=${Date.now()}`;
+
+    let temp = new Image();
+
+    temp.onload = () => {
+
+        pic.src = url;
+
+        flipCard.style.display =
+            "block";
+
+        loader.style.display =
+            "none";
+
+        detailsBtn.style.display =
+            "flex";
+
+        statusText.innerText =
+            `FOUND : ${roll}`;
+
+        loading = false;
+    };
+
+    temp.onerror = () => {
+
+        pic.src = "";
+
+        flipCard.style.display =
+            "none";
+
+        loader.style.display =
+            "none";
+
+        detailsBtn.style.display =
+            "none";
+
+        statusText.innerText =
+            `NOT FOUND : ${roll}`;
+
+        loading = false;
+    };
+
+    temp.src = url;
+}
+
+function nextImage(){
+
+    if(loading) return;
+
+    currentRoll++;
+
+    loadImage(currentRoll);
+}
+
+function prevImage(){
+
+    if(loading) return;
+
+    currentRoll--;
+
+    loadImage(currentRoll);
+}
+
+async function showDetails(){
+
+    if(detailsLoaded){
+
+        flipCard.classList.toggle(
+            "flipped"
+        );
+
+        return;
+    }
+
+    detailsBtn.style.pointerEvents =
+        "none";
+
+    const eventSource =
+        new EventSource(
+
+`/fetch-user-stream?rollNo=${currentRoll}`
+
+        );
+
+    // LIVE PROGRESS
+
+    eventSource.onmessage = event => {
+
+        const info =
+            JSON.parse(event.data);
+
+        progressFill.style.width =
+            info.progress + "%";
+
+        btnText.innerText =
+
+`Loading ${info.progress}%`;
+    };
+
+    // FINAL DATA
+
+    eventSource.addEventListener(
+        "done",
+        event => {
+
+        const result =
+            JSON.parse(event.data);
+
+        if(result.success){
+
+            document.getElementById(
+                "dName"
+            ).innerText =
+                result.data.name;
+
+            document.getElementById(
+                "dEmail"
+            ).innerText =
+                "EMAIL : " +
+                result.data.email;
+
+            document.getElementById(
+                "dDob"
+            ).innerText =
+                "DOB : " +
+                result.data.dob;
+
+            document.getElementById(
+                "dRoll"
+            ).innerText =
+                "ROLL : " +
+                result.data.rollNo;
+
+            document.getElementById(
+                "dPhone"
+            ).innerText =
+                "PHONE : " +
+                result.data.phone;
+
+            document.getElementById(
+                "dAddress"
+            ).innerText =
+                "ADDRESS : " +
+                result.data.address;
+
+            detailsLoaded = true;
+
+            btnText.innerText =
+                "Data Loaded";
+
+            flipCard.classList.add(
+                "flipped"
+            );
+        }
+
+        eventSource.close();
+    });
+
+    // ERROR
+
+    eventSource.addEventListener(
+        "error",
+        () => {
+
+        alert("Server Error");
+
+        progressFill.style.width =
+            "0%";
+
+        btnText.innerText =
+            "Show Details";
+
+        detailsBtn.style.pointerEvents =
+            "auto";
+
+        eventSource.close();
+    });
+}
+
+flipCard.addEventListener(
+    "click",
+    () => {
+
+    if(detailsLoaded){
+
+        flipCard.classList.toggle(
+            "flipped"
+        );
+    }
+});
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+    if(
+        e.key === "ArrowRight" ||
+        e.key === "Enter"
+    ){
+
+        nextImage();
+    }
+
+    if(e.key === "ArrowLeft"){
+
+        prevImage();
+    }
+});
+
+let touchStartX = 0;
+
+let touchEndX = 0;
+
+document.addEventListener(
+    "touchstart",
+    e => {
+
+    touchStartX =
+        e.changedTouches[0].screenX;
+
+});
+
+document.addEventListener(
+    "touchend",
+    e => {
+
+    touchEndX =
+        e.changedTouches[0].screenX;
+
+    handleSwipe();
+
+});
+
+function handleSwipe(){
+
+    let diff =
+        touchStartX - touchEndX;
+
+    if(Math.abs(diff) < 40)
+        return;
+
+    if(diff > 0){
+
+        nextImage();
+
+    }else{
+
+        prevImage();
+    }
+}
+
+</script>
+
+</body>
+</html>
